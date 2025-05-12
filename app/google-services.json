@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "966462060320",
+    "project_id": "nutritionlabelanalyzer",
+    "storage_bucket": "nutritionlabelanalyzer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:966462060320:android:fe4593d18f8df6c70c8945",
+        "android_client_info": {
+          "package_name": "com.example.nutritionlabelapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjdd_yaVGGhgDvf4ZpMX8ewD1mL8n_oxc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
