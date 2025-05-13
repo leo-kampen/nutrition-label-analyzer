@@ -11,6 +11,9 @@ import com.example.nutritionlabelapp.databinding.ActivityAnalyzeBinding
 import com.example.nutritionlabelapp.network.OllamaChatMessage
 import com.example.nutritionlabelapp.network.OllamaChatRequest
 import com.example.nutritionlabelapp.network.RetrofitClient
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
 
 class AnalyzeActivity : AppCompatActivity() {
@@ -24,34 +27,37 @@ class AnalyzeActivity : AppCompatActivity() {
         binding = ActivityAnalyzeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 1) Set up the toolbar with Up button
+        // 1) Toolbar + Up button
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { finish() }
 
-        // 2) Load and display the image
-        imageUri = intent.getStringExtra("imageUri")?.let { Uri.parse(it) }
-        binding.imgLabel.setImageURI(imageUri)
+        // 2) Grab the image URI from the intent
+        imageUri = intent.getStringExtra("imageUri")?.let(Uri::parse)
 
-        // 3) Set up the chat RecyclerView (note: rvChat matches your XML)
+        // 3) Set up the chat RecyclerView
         adapter = ChatAdapter()
         binding.rvChat.layoutManager = LinearLayoutManager(this)
         binding.rvChat.adapter = adapter
 
-        // Disable send until after initial analysis
+        // 4) Disable the Send button until after the first response
         binding.btnSend.isEnabled = false
 
-        // 4) Kick off the initial prompt
+        // 5) Kick off the invisible OCR + initial prompt
         imageUri?.let { sendInitialPrompt(it) }
+            ?: run {
+                // if no image, just enable send so user can type
+                binding.btnSend.isEnabled = true
+            }
 
-        // 5) Handle user‐entered replies
+        // 6) Handle user‐entered follow‐up messages
         binding.btnSend.setOnClickListener {
             val text = binding.etMessage.text.toString().trim()
             if (text.isNotEmpty()) {
                 adapter.addMessage(ChatMessage(text, isUser = true))
                 binding.etMessage.text?.clear()
                 binding.rvChat.scrollToPosition(adapter.itemCount - 1)
-                sendUserMessage(text)
+                callOllama(text)
             }
         }
     }
@@ -61,56 +67,60 @@ class AnalyzeActivity : AppCompatActivity() {
         return true
     }
 
+    /** Runs OCR on the image, then sends that text to Ollama without showing it in the chat. */
     private fun sendInitialPrompt(uri: Uri) {
-        val prompt = """
-          You are a nutrition expert. Here is a link to a nutrition label image:
-          $uri
-          Please analyze its calories, macros, and tell me if it's healthy.
-        """.trimIndent()
+        val image = InputImage.fromFilePath(this, uri)
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-        // Show it as the user's message
-        adapter.addMessage(ChatMessage(prompt, isUser = true))
-        // And send it off
-        callOllama(prompt)
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                // Flatten and trim the extracted text
+                val extracted = visionText.text
+                    .replace("\n", " ")
+                    .take(2000)
+                // Now send it off
+                val prompt = "You are a nutrition expert. Summarise the nutrition in a short statement:\n$extracted"
+                callOllama(prompt)
+                //callOllama(extracted)
+            }
+            .addOnFailureListener {
+                // Fallback prompt if OCR fails
+                callOllama("Please analyze this nutrition label.")
+            }
     }
 
-    private fun sendUserMessage(userText: String) {
-        callOllama(userText)
-    }
-
+    /** Sends any string to your local Llama server and handles the chat UI. */
     private fun callOllama(content: String) {
         lifecycleScope.launch {
-            // 1) Placeholder “Analyzing…”
+            // 1) Show “Analyzing…” in the chat
             adapter.addMessage(ChatMessage("Analyzing…", isUser = false))
             binding.rvChat.scrollToPosition(adapter.itemCount - 1)
 
-            // 2) Build request
+            // 2) Build the request
             val req = OllamaChatRequest(
-                model = "llama3.1:70b",
+                //model = "llama3.1:70b",
+                //model = "smollm2:135m",
+                model = "deepseek-r1",
                 messages = listOf(OllamaChatMessage("user", content))
             )
 
-            // 3) Call the service
+            // 3) Call the API
             val resp = RetrofitClient.ollamaService.chat(req)
 
             // 4) Remove the placeholder
-            adapter.removeLastBotMessage()  // your adapter must implement this
+            adapter.removeLastBotMessage()
 
-            // 5) Show reply or error
-            // New (message-based) parsing
+            // 5) Display the reply or an error
             if (resp.isSuccessful) {
-                val reply = resp.body()
-                    ?.message
-                    ?.content
+                val reply = resp.body()?.message?.content
                     ?: "No response from model."
                 adapter.addMessage(ChatMessage(reply, isUser = false))
-            }
-            else {
+            } else {
                 val err = resp.errorBody()?.string() ?: resp.message()
                 adapter.addMessage(ChatMessage("Error: $err", isUser = false))
             }
 
-            // 6) Scroll and enable send
+            // 6) Scroll to bottom & enable Send
             binding.rvChat.scrollToPosition(adapter.itemCount - 1)
             binding.btnSend.isEnabled = true
         }
