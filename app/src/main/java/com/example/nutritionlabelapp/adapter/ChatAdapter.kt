@@ -17,6 +17,14 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         notifyItemInserted(items.size - 1)
     }
 
+    fun removeLastBotMessage() {
+        if (items.isNotEmpty() && !items.last().isUser) {
+            items.removeAt(items.size - 1)
+            notifyItemRemoved(items.size)
+        }
+    }
+
+
     override fun getItemViewType(position: Int): Int {
         return if (items[position].isUser) 1 else 0
     }
