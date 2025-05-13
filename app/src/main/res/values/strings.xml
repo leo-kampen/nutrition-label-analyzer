@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name -->
-    <string name="app_name">Nutrition Label Analyzer</string>
-
-    <!-- Content description for the ImageView in AnalyzeActivity -->
+    <string name="app_name">Nutrition Label App</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="retake_photo">Retake Photo</string>
+    <string name="analyze">Analyze</string>
+    <string name="back">Back</string>
     <string name="label_image">Nutrition label image</string>
-
-    <!-- Placeholder text in AnalyzeActivity -->
-    <string name="result_placeholder">Analyzing…</string>
+    <string name="send">Send</string>
 </resources>
