@@ -52,10 +52,10 @@ dependencies {
 
     // Layouts & CameraX
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.camera:camera-core:1.3.0")
-    implementation("androidx.camera:camera-camera2:1.3.0")
-    implementation("androidx.camera:camera-lifecycle:1.3.0")
-    implementation("androidx.camera:camera-view:1.2.3")
+    implementation("androidx.camera:camera-core:1.4.0")
+    implementation("androidx.camera:camera-camera2:1.4.0")
+    implementation("androidx.camera:camera-lifecycle:1.4.0")
+    implementation("androidx.camera:camera-view:1.4.0")
 
     // ListenableFuture support (guava API + AndroidX shim)
     implementation("androidx.concurrent:concurrent-futures:1.1.0")
