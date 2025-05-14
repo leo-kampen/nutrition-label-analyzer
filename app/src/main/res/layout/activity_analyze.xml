@@ -8,55 +8,61 @@
     android:layout_height="match_parent"
     tools:context=".AnalyzeActivity">
 
-    <!-- Top App Bar with Up button -->
+    <!-- 1) Top App Bar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
+        android:title="Chat"
         android:titleTextColor="?attr/colorOnPrimary"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:title="Chat" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Chat messages list now directly under the toolbar -->
+    <!-- 2) Chat messages list -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChat"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingBottom="60dp"
+        android:padding="8dp"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toTopOf="@+id/tilInput"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/llInput" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Input area -->
-    <LinearLayout
-        android:id="@+id/llInput"
+    <!-- 3) Input field container -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilInput"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:background="?attr/colorSurface"
+        android:hint="Type a message…"
+        app:boxBackgroundMode="outline"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_margin="8dp">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etMessage"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:imeOptions="actionSend"
-            android:hint="Type a message…" />
+            android:imeOptions="actionSend"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
-            android:id="@+id/btnSend"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/send" />
-    </LinearLayout>
+    <!-- 4) Send FAB anchored to the right of the input -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/send"
+        android:src="@drawable/ex_test"
+        android:tint="?attr/colorOnSecondary"
+        app:layout_constraintBottom_toBottomOf="@id/tilInput"
+        app:layout_constraintEnd_toEndOf="@id/tilInput"
+        app:layout_constraintTop_toTopOf="@id/tilInput"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

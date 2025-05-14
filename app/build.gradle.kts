@@ -96,6 +96,8 @@ dependencies {
 
     // ML Kit on-device text recognition
     implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation ("androidx.appcompat:appcompat:1.6.1")
+
 
 
 }

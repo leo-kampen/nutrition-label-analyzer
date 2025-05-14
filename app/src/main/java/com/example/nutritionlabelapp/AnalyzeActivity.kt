@@ -30,12 +30,12 @@ class AnalyzeActivity : AppCompatActivity() {
         binding = ActivityAnalyzeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 1) Toolbar + Up arrow
+        // 1) Toolbar + back arrow
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { finish() }
 
-        // 2) Grab & Base64-encode the image off the UI thread
+        // 2) Grab & Base64 encode the image on a background thread
         imageUri = intent.getStringExtra("imageUri")?.let(Uri::parse)
         imageUri?.let { uri ->
             lifecycleScope.launch(Dispatchers.IO) {
@@ -48,21 +48,23 @@ class AnalyzeActivity : AppCompatActivity() {
         binding.rvChat.layoutManager = LinearLayoutManager(this)
         binding.rvChat.adapter = adapter
 
-        // 4) Disable Send until after the first analysis
+        // 4) Disable send until the first analysis completes
         binding.btnSend.isEnabled = false
 
-        // 5) Show fixed prompt & start the first generate call
+        // 5) Kick off the very first, image-only prompt
         imageUri?.let { sendInitialPrompt() }
             ?: run { binding.btnSend.isEnabled = true }
 
-        // 6) Handle follow-up user messages
+        // 6) Handle all follow-ups
         binding.btnSend.setOnClickListener {
             val userText = binding.etMessage.text.toString().trim()
             if (userText.isNotEmpty()) {
+                // a) show the user’s question
                 adapter.addMessage(ChatMessage(userText, isUser = true))
                 binding.etMessage.text?.clear()
                 binding.rvChat.scrollToPosition(adapter.itemCount - 1)
-                callGenerate(images = null)
+                // b) send it off (no image after the first turn)
+                callGenerate(userText)
             }
         }
     }
@@ -73,56 +75,60 @@ class AnalyzeActivity : AppCompatActivity() {
     }
 
     /**
-     * 1) Shows the fixed instruction as a user message
-     * 2) Waits for Base64 image to be ready
-     * 3) Calls the multimodal /api/generate with that image
+     * First turn: shows your fixed prompt, then waits for the Base64 image, then calls LLM with only the image.
      */
     private fun sendInitialPrompt() {
-        val prompt = "You are a nutrition expert. Summarize this label in a short statement."
+        val prompt = "You are a nutrition expert. Summarize this food label."
         adapter.addMessage(ChatMessage(prompt, isUser = true))
         binding.rvChat.scrollToPosition(adapter.itemCount - 1)
 
         lifecycleScope.launch {
-            // wait until the image is Base64-encoded
             val imgB64 = withContext(Dispatchers.IO) {
                 while (imageBase64 == null) delay(50)
                 imageBase64!!
             }
-            // first call includes the image
-            callGenerate(images = listOf(imgB64))
+            callGenerate(prompt, images = listOf(imgB64))
         }
     }
 
     /**
-     * Constructs the full conversational prompt by replaying history,
-     * then shows “Analyzing…”, fires /api/generate, replaces the placeholder
-     * with the model’s reply (or error), and finally enables the Send button.
+     * Subsequent turns (and also the first turn if images!=null):
+     * 1) Builds the full prompt: system + history + latest user turn
+     * 2) Shows “Analyzing…”
+     * 3) Fires /api/generate
+     * 4) Swaps in the model’s reply
+     * 5) Re-enables Send
      *
-     * @param images  If non-null, attaches these Base64 images (only on first call).
+     * @param newUserText  The most recent user message (text).
+     * @param images       Base64 images to attach (only for the first call).
      */
-    private fun callGenerate(images: List<String>?) {
+    private fun callGenerate(
+        newUserText: String,
+        images: List<String>? = null
+    ) {
         lifecycleScope.launch {
-            // Build the prompt including all previous messages
-            val fullPrompt = buildConversationPrompt()
+            // 1) Build the stateless prompt
+            val fullPrompt = buildConversationPrompt(newUserText)
 
-            // 1) Show placeholder
+            // 2) show placeholder
             adapter.addMessage(ChatMessage("Analyzing…", isUser = false))
             binding.rvChat.scrollToPosition(adapter.itemCount - 1)
 
-            // 2) Fire the multimodal request
+            // 3) send it
             val req = GenerateRequest(
-                model  = "gemma3:4b",
+                model  = "llama4",
                 prompt = fullPrompt,
                 images = images,
                 stream = false
             )
+
             try {
                 val resp = RetrofitClient.ollamaService.generate(req)
 
-                // 3) Remove the placeholder
+                // 4) remove placeholder
                 adapter.removeLastBotMessage()
 
-                // 4) Display the reply or error
+                // 5) show reply or error
                 if (resp.isSuccessful) {
                     val reply = resp.body()?.response ?: "No response from model."
                     adapter.addMessage(ChatMessage(reply, isUser = false))
@@ -137,35 +143,35 @@ class AnalyzeActivity : AppCompatActivity() {
                 )
             }
 
-            // 5) Scroll to bottom and re-enable sending
+            // 6) scroll & re-enable
             binding.rvChat.scrollToPosition(adapter.itemCount - 1)
             binding.btnSend.isEnabled = true
         }
     }
 
     /**
-     * Reads the entire chat history and formats it for the LLM:
-     *
-     * You are a nutrition expert...
-     * User: first prompt
-     * Assistant: first reply
-     * User: follow-up
-     * Assistant:
+     * System + every prior User/Assistant message + the latest turn.
+     * Ending on “Assistant:” cues the model to reply.
      */
-    private fun buildConversationPrompt(): String {
-        val system = "You are a nutrition expert. Summarize this label in a short statement."
+    private fun buildConversationPrompt(newUserText: String): String {
+        val system = "You are a nutrition expert. Summarize this food label."
         val history = adapter.currentList.joinToString("\n") { msg ->
-            if (msg.isUser) "User: ${msg.text}" else "Assistant: ${msg.text}"
+            if (msg.isUser) "User: ${msg.text}"
+            else             "Assistant: ${msg.text}"
         }
-        return "$system\n$history\nAssistant:"
+        return if (history.isEmpty()) {
+            "$system\nUser: $newUserText\nAssistant:"
+        } else {
+            "$system\n$history\nUser: $newUserText\nAssistant:"
+        }
     }
 
-    /** JPEG-compresses the image and returns it as a Base64 string. */
+    /** JPEG-compress + Base64 encode. */
     private fun encodeImageToBase64(uri: Uri): String {
         contentResolver.openInputStream(uri).use { input ->
-            val bitmap = android.graphics.BitmapFactory.decodeStream(input)
+            val bmp = android.graphics.BitmapFactory.decodeStream(input)
             val baos = ByteArrayOutputStream()
-            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, baos)
+            bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, baos)
             return Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
         }
     }
