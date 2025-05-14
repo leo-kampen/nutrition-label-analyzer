@@ -1,63 +1,68 @@
+// File: app/src/main/java/com/example/nutritionlabelapp/AnalyzeActivity.kt
 package com.example.nutritionlabelapp
 
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.nutritionlabelapp.adapter.ChatAdapter
 import com.example.nutritionlabelapp.adapter.ChatMessage
 import com.example.nutritionlabelapp.databinding.ActivityAnalyzeBinding
-import com.example.nutritionlabelapp.network.OllamaChatMessage
-import com.example.nutritionlabelapp.network.OllamaChatRequest
+import com.example.nutritionlabelapp.network.GenerateRequest
 import com.example.nutritionlabelapp.network.RetrofitClient
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 class AnalyzeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAnalyzeBinding
     private lateinit var adapter: ChatAdapter
     private var imageUri: Uri? = null
+    private var imageBase64: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAnalyzeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 1) Toolbar + Up button
+        // 1) Toolbar + Up arrow
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { finish() }
 
-        // 2) Grab the image URI from the intent
+        // 2) Grab & Base64-encode the image off the UI thread
         imageUri = intent.getStringExtra("imageUri")?.let(Uri::parse)
+        imageUri?.let { uri ->
+            lifecycleScope.launch(Dispatchers.IO) {
+                imageBase64 = encodeImageToBase64(uri)
+            }
+        }
 
-        // 3) Set up the chat RecyclerView
+        // 3) RecyclerView + adapter
         adapter = ChatAdapter()
         binding.rvChat.layoutManager = LinearLayoutManager(this)
         binding.rvChat.adapter = adapter
 
-        // 4) Disable the Send button until after the first response
+        // 4) Disable Send until after the first analysis
         binding.btnSend.isEnabled = false
 
-        // 5) Kick off the invisible OCR + initial prompt
-        imageUri?.let { sendInitialPrompt(it) }
-            ?: run {
-                // if no image, just enable send so user can type
-                binding.btnSend.isEnabled = true
-            }
+        // 5) Show fixed prompt & start the first generate call
+        imageUri?.let { sendInitialPrompt() }
+            ?: run { binding.btnSend.isEnabled = true }
 
-        // 6) Handle user‐entered follow‐up messages
+        // 6) Handle follow-up user messages
         binding.btnSend.setOnClickListener {
-            val text = binding.etMessage.text.toString().trim()
-            if (text.isNotEmpty()) {
-                adapter.addMessage(ChatMessage(text, isUser = true))
+            val userText = binding.etMessage.text.toString().trim()
+            if (userText.isNotEmpty()) {
+                adapter.addMessage(ChatMessage(userText, isUser = true))
                 binding.etMessage.text?.clear()
                 binding.rvChat.scrollToPosition(adapter.itemCount - 1)
-                callOllama(text)
+                callGenerate(images = null)
             }
         }
     }
@@ -67,62 +72,101 @@ class AnalyzeActivity : AppCompatActivity() {
         return true
     }
 
-    /** Runs OCR on the image, then sends that text to Ollama without showing it in the chat. */
-    private fun sendInitialPrompt(uri: Uri) {
-        val image = InputImage.fromFilePath(this, uri)
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    /**
+     * 1) Shows the fixed instruction as a user message
+     * 2) Waits for Base64 image to be ready
+     * 3) Calls the multimodal /api/generate with that image
+     */
+    private fun sendInitialPrompt() {
+        val prompt = "You are a nutrition expert. Summarize this label in a short statement."
+        adapter.addMessage(ChatMessage(prompt, isUser = true))
+        binding.rvChat.scrollToPosition(adapter.itemCount - 1)
 
-        recognizer.process(image)
-            .addOnSuccessListener { visionText ->
-                // Flatten and trim the extracted text
-                val extracted = visionText.text
-                    .replace("\n", " ")
-                    .take(2000)
-                // Now send it off
-                val prompt = "You are a nutrition expert. Summarise the nutrition in a short statement:\n$extracted"
-                callOllama(prompt)
-                //callOllama(extracted)
+        lifecycleScope.launch {
+            // wait until the image is Base64-encoded
+            val imgB64 = withContext(Dispatchers.IO) {
+                while (imageBase64 == null) delay(50)
+                imageBase64!!
             }
-            .addOnFailureListener {
-                // Fallback prompt if OCR fails
-                callOllama("Please analyze this nutrition label.")
-            }
+            // first call includes the image
+            callGenerate(images = listOf(imgB64))
+        }
     }
 
-    /** Sends any string to your local Llama server and handles the chat UI. */
-    private fun callOllama(content: String) {
+    /**
+     * Constructs the full conversational prompt by replaying history,
+     * then shows “Analyzing…”, fires /api/generate, replaces the placeholder
+     * with the model’s reply (or error), and finally enables the Send button.
+     *
+     * @param images  If non-null, attaches these Base64 images (only on first call).
+     */
+    private fun callGenerate(images: List<String>?) {
         lifecycleScope.launch {
-            // 1) Show “Analyzing…” in the chat
+            // Build the prompt including all previous messages
+            val fullPrompt = buildConversationPrompt()
+
+            // 1) Show placeholder
             adapter.addMessage(ChatMessage("Analyzing…", isUser = false))
             binding.rvChat.scrollToPosition(adapter.itemCount - 1)
 
-            // 2) Build the request
-            val req = OllamaChatRequest(
-                //model = "llama3.1:70b",
-                //model = "smollm2:135m",
-                model = "deepseek-r1",
-                messages = listOf(OllamaChatMessage("user", content))
+            // 2) Fire the multimodal request
+            val req = GenerateRequest(
+                model  = "gemma3:4b",
+                prompt = fullPrompt,
+                images = images,
+                stream = false
             )
+            try {
+                val resp = RetrofitClient.ollamaService.generate(req)
 
-            // 3) Call the API
-            val resp = RetrofitClient.ollamaService.chat(req)
+                // 3) Remove the placeholder
+                adapter.removeLastBotMessage()
 
-            // 4) Remove the placeholder
-            adapter.removeLastBotMessage()
-
-            // 5) Display the reply or an error
-            if (resp.isSuccessful) {
-                val reply = resp.body()?.message?.content
-                    ?: "No response from model."
-                adapter.addMessage(ChatMessage(reply, isUser = false))
-            } else {
-                val err = resp.errorBody()?.string() ?: resp.message()
-                adapter.addMessage(ChatMessage("Error: $err", isUser = false))
+                // 4) Display the reply or error
+                if (resp.isSuccessful) {
+                    val reply = resp.body()?.response ?: "No response from model."
+                    adapter.addMessage(ChatMessage(reply, isUser = false))
+                } else {
+                    val err = resp.errorBody()?.string() ?: resp.message()
+                    adapter.addMessage(ChatMessage("Error: $err", isUser = false))
+                }
+            } catch (e: Exception) {
+                adapter.removeLastBotMessage()
+                adapter.addMessage(
+                    ChatMessage("Request failed: ${e.localizedMessage}", isUser = false)
+                )
             }
 
-            // 6) Scroll to bottom & enable Send
+            // 5) Scroll to bottom and re-enable sending
             binding.rvChat.scrollToPosition(adapter.itemCount - 1)
             binding.btnSend.isEnabled = true
+        }
+    }
+
+    /**
+     * Reads the entire chat history and formats it for the LLM:
+     *
+     * You are a nutrition expert...
+     * User: first prompt
+     * Assistant: first reply
+     * User: follow-up
+     * Assistant:
+     */
+    private fun buildConversationPrompt(): String {
+        val system = "You are a nutrition expert. Summarize this label in a short statement."
+        val history = adapter.currentList.joinToString("\n") { msg ->
+            if (msg.isUser) "User: ${msg.text}" else "Assistant: ${msg.text}"
+        }
+        return "$system\n$history\nAssistant:"
+    }
+
+    /** JPEG-compresses the image and returns it as a Base64 string. */
+    private fun encodeImageToBase64(uri: Uri): String {
+        contentResolver.openInputStream(uri).use { input ->
+            val bitmap = android.graphics.BitmapFactory.decodeStream(input)
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, baos)
+            return Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
         }
     }
 }

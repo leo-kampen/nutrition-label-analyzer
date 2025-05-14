@@ -6,10 +6,11 @@ import retrofit2.http.POST
 
 interface OllamaService {
     /**
-     * Chat-style endpoint: sends all messages so far, returns assistant’s reply.
+     * Fire-and-forget multimodal generation.
+     * Sends prompt + optional images, returns a single response string.
      */
-    @POST("api/chat")
-    suspend fun chat(
-        @Body req: OllamaChatRequest
-    ): Response<OllamaChatResponse>
+    @POST("api/generate")
+    suspend fun generate(
+        @Body req: GenerateRequest
+    ): Response<GenerateResponse>
 }
