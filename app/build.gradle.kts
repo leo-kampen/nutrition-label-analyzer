@@ -98,6 +98,9 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.0")
     implementation ("androidx.appcompat:appcompat:1.6.1")
 
+    implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
+    implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
+
 
 
 }
