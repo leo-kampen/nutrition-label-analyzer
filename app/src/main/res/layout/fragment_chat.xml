@@ -2,11 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/clAnalyze"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".AnalyzeActivity">
+    android:layout_height="match_parent">
 
     <!-- 1) Top App Bar -->
     <com.google.android.material.appbar.MaterialToolbar
@@ -14,26 +11,25 @@
         style="@style/Widget.MaterialComponents.Toolbar.Primary"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:title="Chat"
-        android:titleTextColor="?attr/colorOnPrimary"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="?attr/colorPrimary"
+        app:title="Nutrition Chat"
+        app:titleTextColor="?attr/colorOnPrimary" />
 
-    <!-- 2) Chat messages list -->
+    <!-- 2) Chat messages -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChat"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:clipToPadding="false"
         android:padding="8dp"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         app:layout_constraintBottom_toTopOf="@+id/tilInput"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 3) Input field container -->
+    <!-- 3) Input field -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilInput"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
@@ -42,27 +38,47 @@
         android:hint="Type a message…"
         app:boxBackgroundMode="outline"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/fabCamera"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_margin="8dp">
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:imeOptions="actionSend"/>
+            android:imeOptions="actionSend"
+            android:inputType="textMultiLine"
+            android:layout_marginBottom="100dp"/>
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- 4) Send FAB anchored to the right of the input -->
+    <!-- 4) Camera FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnSend"
+        android:id="@+id/fabCamera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/send"
-        android:src="@drawable/ex_test"
-        android:tint="?attr/colorOnSecondary"
+        app:srcCompat="@drawable/ic_camera"
+        app:fabSize="mini"
+        app:tint="?attr/colorOnSecondary"
         app:layout_constraintBottom_toBottomOf="@id/tilInput"
-        app:layout_constraintEnd_toEndOf="@id/tilInput"
-        app:layout_constraintTop_toTopOf="@id/tilInput"/>
+        app:layout_constraintEnd_toStartOf="@id/fabSend"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="100dp"/>
+
+    <!-- 5) Send FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@android:drawable/ic_menu_send"
+        app:fabSize="mini"
+        app:tint="?attr/colorOnSecondary"
+        app:layout_constraintBottom_toBottomOf="@id/tilInput"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="100dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
