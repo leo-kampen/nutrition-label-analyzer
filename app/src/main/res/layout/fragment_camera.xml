@@ -1,25 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/camera_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true">
 
-    <!-- somewhere in fragment_camera.xml -->
+    <!-- Top App Bar with back arrow -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/cameraToolbar"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:navigationIcon="@drawable/ic_send"
+        app:title="Take Photo"
+        app:titleTextColor="?attr/colorOnPrimary" />
 
+    <!-- Live camera preview fills available space -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Take Photo button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTakePhoto"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="Take Photo" />
+
+    <!-- Analyze button sits below Take Photo -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAnalyze"
         style="@style/Widget.MaterialComponents.Button"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/analyze"
-        android:enabled="false"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_margin="16dp"/>
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="Analyze"
+        android:enabled="false" />
 
-
-    <!-- Your PreviewView, ImageView, btnTakePhoto, btnAnalyze as before -->
-    <!-- Just update IDs to match binding -->
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
