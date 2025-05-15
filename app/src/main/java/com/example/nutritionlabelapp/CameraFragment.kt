@@ -1,4 +1,3 @@
-
 // File: app/src/main/java/com/example/nutritionlabelapp/CameraFragment.kt
 package com.example.nutritionlabelapp
 
@@ -16,40 +15,28 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.nutritionlabelapp.databinding.FragmentCameraBinding
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-
 
 class CameraFragment : Fragment() {
+
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
 
     private var cameraProvider: ProcessCameraProvider? = null
-    private lateinit var cameraExecutor: ExecutorService
     private var imageCapture: ImageCapture? = null
     private var imageUri: Uri? = null
 
-    private val requestCameraPermission =
+    private val requestPermission =
         registerForActivityResult(RequestPermission()) { granted ->
             if (granted) startCamera()
             else {
                 Toast.makeText(requireContext(), "Camera permission denied", Toast.LENGTH_SHORT).show()
-                cleanUpCamera()
                 findNavController().navigateUp()
             }
         }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        cameraExecutor = Executors.newSingleThreadExecutor()
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -62,17 +49,24 @@ class CameraFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Back arrow
         binding.cameraToolbar.setNavigationOnClickListener {
-            cleanUpCamera()
             findNavController().navigateUp()
         }
 
+        // Request permission / start camera
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED
-        ) startCamera()
-        else requestCameraPermission.launch(Manifest.permission.CAMERA)
+        ) {
+            startCamera()
+        } else {
+            requestPermission.launch(Manifest.permission.CAMERA)
+        }
 
+        // Take Photo
         binding.btnTakePhoto.setOnClickListener { takePhoto() }
+
+        // Retake
         binding.btnRetake.setOnClickListener {
             imageUri = null
             binding.ivCapturedPhoto.visibility = View.GONE
@@ -81,13 +75,14 @@ class CameraFragment : Fragment() {
             binding.btnRetake.visibility = View.GONE
             binding.btnTakePhoto.visibility = View.VISIBLE
         }
+
+        // Analyze → back to Chat
         binding.btnAnalyze.setOnClickListener {
             imageUri?.let { uri ->
                 parentFragmentManager.setFragmentResult(
                     "nutrition_image_request",
                     Bundle().apply { putString("imageUri", uri.toString()) }
                 )
-                cleanUpCamera()
                 findNavController().navigateUp()
             }
         }
@@ -99,6 +94,7 @@ class CameraFragment : Fragment() {
                 cameraProvider = future.get().also { provider ->
                     provider.unbindAll()
 
+                    // lower‐res preview for performance
                     val preview = Preview.Builder()
                         .setTargetResolution(Size(640, 480))
                         .build()
@@ -115,9 +111,9 @@ class CameraFragment : Fragment() {
                             preview,
                             imageCapture
                         )
-                    } catch (exc: Exception) {
+                    } catch (e: Exception) {
                         Snackbar.make(binding.root,
-                            "Camera initialization failed",
+                            "Camera init failed",
                             Snackbar.LENGTH_LONG
                         ).show()
                     }
@@ -127,77 +123,46 @@ class CameraFragment : Fragment() {
     }
 
     private fun takePhoto() {
-        val file = File(
+        val photoFile = File(
             requireContext().externalMediaDirs.first(),
             "IMG_${System.currentTimeMillis()}.jpg"
         )
-        val options = ImageCapture.OutputFileOptions.Builder(file).build()
+        val options = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+        // **Use the main‐thread executor** so we never reject tasks
         imageCapture?.takePicture(
             options,
-            cameraExecutor,
+            ContextCompat.getMainExecutor(requireContext()),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
-                    binding.root.post {
-                        Snackbar.make(binding.root,
-                            "Photo capture failed",
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
+                    Snackbar.make(binding.root,
+                        "Photo capture failed",
+                        Snackbar.LENGTH_LONG
+                    ).show()
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    val uri = Uri.fromFile(file)
-                    imageUri = uri
-
-                    binding.root.post {
-                        binding.ivCapturedPhoto.setImageURI(uri)
-                        binding.ivCapturedPhoto.visibility = View.VISIBLE
-                        binding.previewView.visibility = View.GONE
-                        binding.btnAnalyze.isEnabled = true
-                        binding.btnRetake.visibility = View.VISIBLE
-                        binding.btnTakePhoto.visibility = View.GONE
-//                        Snackbar.make(binding.root,
-//                            "Photo captured",
-//                            Snackbar.LENGTH_SHORT
-//                        ).show()
-                    }
+                    imageUri = Uri.fromFile(photoFile)
+                    // Update UI on main thread
+                    binding.ivCapturedPhoto.setImageURI(imageUri)
+                    binding.ivCapturedPhoto.visibility = View.VISIBLE
+                    binding.previewView.visibility = View.GONE
+                    binding.btnAnalyze.isEnabled = true
+                    binding.btnRetake.visibility = View.VISIBLE
+                    binding.btnTakePhoto.visibility = View.GONE
+//                    Snackbar.make(binding.root,
+//                        "Photo captured",
+//                        Snackbar.LENGTH_SHORT
+//                    ).show()
                 }
             }
         )
-    }
-
-
-    private fun cleanUpCamera() {
-        // 1) detach all camera use-cases
-        cameraProvider?.unbindAll()
-
-          // 2) kill your local capture callback executor
-        if (::cameraExecutor.isInitialized && !cameraExecutor.isShutdown) {
-            cameraExecutor.shutdownNow()
-            }
-
-        //(requireActivity().application as MyApp).cameraXExecutor.shutdownNow()
-    }
-
-
-
-
-
-    override fun onPause() {
-        super.onPause()
-        cleanUpCamera()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // unbind use-cases so the camera hardware is free
+        // only unbind — do not shut down any executor here
         cameraProvider?.unbindAll()
-        // shut down your single-thread image-capture executor
-        if (::cameraExecutor.isInitialized && !cameraExecutor.isShutdown) {
-            cameraExecutor.shutdownNow()
-        }
         _binding = null
     }
-
 }
-

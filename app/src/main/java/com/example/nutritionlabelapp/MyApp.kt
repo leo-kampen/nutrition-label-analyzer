@@ -4,6 +4,7 @@ package com.example.nutritionlabelapp
 import android.app.Application
 import android.os.Handler
 import android.os.Looper
+import android.os.StrictMode
 import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.CameraXConfig
 import java.util.concurrent.ExecutorService
@@ -16,6 +17,18 @@ class MyApp : Application(), CameraXConfig.Provider {
     override fun onCreate() {
         super.onCreate()
         // nothing else needed here
+//        StrictMode.setThreadPolicy(
+//            StrictMode.ThreadPolicy.Builder()
+//                .detectAll()
+//                .penaltyLog()
+//                .build()
+//        )
+//        StrictMode.setVmPolicy(
+//            StrictMode.VmPolicy.Builder()
+//                .detectAll()
+//                .penaltyLog()
+//                .build()
+//        )
     }
 
     override fun getCameraXConfig(): CameraXConfig =
