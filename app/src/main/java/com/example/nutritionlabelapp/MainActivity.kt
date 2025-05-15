@@ -33,11 +33,11 @@ class MainActivity : AppCompatActivity() {
         // 3) Hook up BottomNav *and* hide it on Camera
         binding.bottomNav.setupWithNavController(navController)
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            binding.bottomNav.visibility =
-                if (destination.id == R.id.cameraFragment)
-                    View.GONE
-                else
-                    View.VISIBLE
+//            binding.bottomNav.visibility =
+//                if (destination.id == R.id.cameraFragment)
+//                    View.GONE
+//                else
+//                    View.VISIBLE
         }
     }
 }
