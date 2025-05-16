@@ -12,17 +12,23 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        app:title="Home"
+        app:title="Settings"
         app:titleTextColor="?attr/colorOnPrimary"/>
 
-    <!-- Your home‐screen content goes below -->
+    <!-- Your settings content goes below -->
     <FrameLayout
-        android:id="@+id/content_home"
+        android:id="@+id/content_more"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_marginTop="?attr/actionBarSize">
-        <!-- ... -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchDarkMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dark Mode"
+            android:textSize="18sp"
+            android:layout_gravity="center"/>
     </FrameLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

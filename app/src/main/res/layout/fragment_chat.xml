@@ -45,14 +45,13 @@
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etMessage"
-            android:layout_width="260dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:inputType="textMultiLine"
             android:imeOptions="actionSend"
-            android:inputType="textNoSuggestions"
-            android:privateImeOptions="nm"
-            android:maxLines="1"
-            android:layout_marginBottom="100dp"/>
+            android:maxLines="4"
+            android:gravity="top|start"
+            android:layout_marginBottom="60dp"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- 4) Camera FAB -->
@@ -66,7 +65,7 @@
         app:layout_constraintBottom_toBottomOf="@id/tilInput"
         app:layout_constraintEnd_toStartOf="@id/fabSend"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="100dp"/>
+        android:layout_marginBottom="60dp"/>
 
     <!-- 5) Send FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -79,7 +78,7 @@
         app:layout_constraintBottom_toBottomOf="@id/tilInput"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="100dp"/>
+        android:layout_marginBottom="60dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

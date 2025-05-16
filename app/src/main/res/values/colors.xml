@@ -5,7 +5,7 @@
     <color name="colorPrimaryVariant">#A92C0C</color>
     <color name="colorOnPrimary">#FFFFFFFF</color>
 
-    <color name="colorSecondary">#2196F3</color>
+    <color name="colorSecondary">#FF5722</color>
     <color name="colorSecondaryVariant">#FF018786</color>
     <color name="colorOnSecondary">#FF000000</color>
 
@@ -14,7 +14,58 @@
     <color name="colorOnBackground">#FF000000</color>
     <color name="colorOnSurface">#FF000000</color>
 
-    <!-- Chat bubble backgrounds -->
-    <color name="user_bubble">@color/colorSecondary</color>    <!-- teal -->
-    <color name="bot_bubble">@color/colorPrimaryVariant</color><!-- darker purple -->
+<!--    &lt;!&ndash; Chat bubble backgrounds &ndash;&gt;-->
+<!--    <color name="user_bubble">@color/colorSecondary</color>-->
+<!--    <color name="bot_bubble">@color/dark_bot_bubble</color>-->
+<!--    &lt;!&ndash; alias names *your layouts & shapes* refer to: &ndash;&gt;-->
+<!--    <color name="bot_text">@color/dark_bot_text</color>-->
+<!--    <color name="user_text">@color/light_user_text</color>-->
+
+    <!-- Light theme -->
+    <color name="light_background">#FFFFFFFF</color>
+    <color name="light_toolbar">#FF5722</color>
+<!--    <color name="light_bot_bubble">#FFEEEEEE</color>-->
+<!--    <color name="light_bot_text">#FF000000</color>-->
+<!--    <color name="light_user_bubble">#F27229</color>-->
+<!--    <color name="light_user_text">#FFFFFFFF</color>-->
+
+    <!-- Dark theme -->
+    <color name="dark_background">#FF121212</color>
+    <color name="dark_toolbar">#FF1E1E1E</color>
+<!--    <color name="dark_bot_bubble">#FF2C2C2C</color>-->
+<!--    <color name="dark_bot_text">#FFFFFFFF</color>-->
+<!--    <color name="dark_user_bubble">#F27229</color>-->
+<!--    <color name="dark_user_text">#FFFFFFFF</color>-->
+
+    <color name="light_fab_icon">#000000</color>
+    <color name="dark_fab_icon">#FFFFFFFF</color>
+
+    <color name="light_input_text">#000000</color>
+    <color name="dark_input_text">#FFFFFF</color>
+
+    <color name="light_input_hint">#666666</color>
+    <color name="dark_input_hint">#CCCCCC</color>
+
+    <!-- the “real” light definitions -->
+    <color name="light_bot_bubble">#C2C1C1C1</color>
+    <color name="light_bot_text">#FF000000</color>
+    <color name="light_user_bubble">#F27229</color>
+    <color name="light_user_text">#FFFFFFFF</color>
+
+    <!-- the “real” dark definitions (still declared here) -->
+    <color name="dark_bot_bubble">#FF2C2C2C</color>
+    <color name="dark_bot_text">#FFFFFFFF</color>
+    <color name="dark_user_bubble">#F27229</color>
+    <color name="dark_user_text">#FFFFFFFF</color>
+
+    <!-- here are the aliases your layouts/shapes reference -->
+    <color name="bot_bubble">@color/light_bot_bubble</color>
+    <color name="bot_text">@color/light_bot_text</color>
+    <color name="user_bubble">@color/light_user_bubble</color>
+    <color name="user_text">@color/dark_bot_text</color>
+
+
+
+
+
 </resources>

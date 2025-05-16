@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bot_bubble">@color/dark_bot_bubble</color>
+    <color name="bot_text">@color/dark_bot_text</color>
+    <color name="user_bubble">@color/dark_user_bubble</color>
+    <color name="user_text">@color/dark_user_text</color>
+</resources>
