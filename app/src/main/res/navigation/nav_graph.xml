@@ -1,30 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/mainFragment">
 
+    <!-- MAIN SCREEN: Food list + buttons -->
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.example.nutritionlabelapp.MainFragment"
+        android:label="Main"
+        tools:layout="@layout/fragment_main">
+
+        <!-- Navigate to Quiz -->
+        <action
+            android:id="@+id/action_mainFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+
+        <!-- Navigate to Recipes -->
+        <action
+            android:id="@+id/action_mainFragment_to_recipesFragment"
+            app:destination="@id/recipesFragment" />
+    </fragment>
+
+    <!-- QUIZ SCREEN -->
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.example.nutritionlabelapp.HomeFragment"
-        android:label="Home" >
-        <!-- existing chat action -->
+        android:label="Quiz"
+        tools:layout="@layout/fragment_home">
+
+        <!-- Quiz → Chat -->
         <action
             android:id="@+id/action_homeFragment_to_chatFragment"
             app:destination="@id/chatFragment" />
-        <!-- NEW: action to ExampleFragment -->
+
+        <!-- After quiz, back to Main -->
         <action
-            android:id="@+id/action_homeFragment_to_exampleFragment"
-            app:destination="@id/exampleFragment" />
+            android:id="@+id/action_homeFragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
     </fragment>
 
-    <!-- … your other fragments … -->
-
+    <!-- CHAT FLOW -->
     <fragment
         android:id="@+id/chatFragment"
         android:name="com.example.nutritionlabelapp.ChatFragment"
-        android:label="Chat">
+        android:label="Chat"
+        tools:layout="@layout/fragment_chat">
+
+        <!-- Chat → Camera -->
         <action
             android:id="@+id/action_chatFragment_to_cameraFragment"
             app:destination="@id/cameraFragment" />
@@ -33,16 +57,19 @@
     <fragment
         android:id="@+id/cameraFragment"
         android:name="com.example.nutritionlabelapp.CameraFragment"
-        android:label="Camera" />
+        android:label="Camera"
+        tools:layout="@layout/fragment_camera" />
 
     <fragment
         android:id="@+id/moreFragment"
         android:name="com.example.nutritionlabelapp.MoreFragment"
-        android:label="More" />
+        android:label="More"
+        tools:layout="@layout/fragment_more" />
 
-    <!-- NEW: ExampleFragment destination -->
+    <!-- RECIPES STUB -->
     <fragment
-        android:id="@+id/exampleFragment"
-        android:name="com.example.nutritionlabelapp.ExampleFragment"
-        android:label="Example" />
+        android:id="@+id/recipesFragment"
+        android:name="com.example.nutritionlabelapp.RecipesFragment"
+        android:label="Recipes"
+        tools:layout="@layout/fragment_recipes" />
 </navigation>

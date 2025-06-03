@@ -2,45 +2,58 @@ package com.example.nutritionlabelapp
 
 import android.os.Bundle
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.setPadding
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.example.nutritionlabelapp.databinding.FragmentExampleBinding
+import androidx.navigation.fragment.findNavController
+import com.example.nutritionlabelapp.databinding.FragmentMainBinding
+import com.example.nutritionlabelapp.theme.ThemeManager
+import com.example.nutritionlabelapp.theme.ThemeOption
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
-class ExampleFragment : Fragment(R.layout.fragment_example) {
+class MainFragment : Fragment(R.layout.fragment_main) {
 
-    private var _binding: FragmentExampleBinding? = null
+    private var _binding: FragmentMainBinding? = null
     private val binding get() = _binding!!
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentExampleBinding.bind(view)
+        _binding = FragmentMainBinding.bind(view)
 
-        // Parse the Excel & get map of Category → List<Items>
+        // Apply themed toolbar color
+        val colors = ThemeManager.getThemeColors(requireContext())
+        (activity as? AppCompatActivity)?.apply {
+            setSupportActionBar(binding.toolbar)
+            supportActionBar?.setDisplayHomeAsUpEnabled(false)
+            binding.toolbar.setBackgroundColor(colors.toolbarColor)
+            binding.toolbar.setTitleTextColor(colors.userTextColor)
+        }
+
+        // Load & display the Excel-based food list (unchanged)
         val data = parseExcelFromAssets("Common_Foods_By_Food_Group_ex.xlsx")
-
-        // Inflate into the container
         val container = binding.container
         data.forEach { (category, items) ->
-            // Category header
-            val headerView = TextView(requireContext()).apply {
-                text = category
-                textSize = 18f
-                setPadding(0, 16, 0, 8)
+            TextView(requireContext()).apply {
+                text = category; textSize = 18f; setPadding(0,16,0,8)
+                setTextColor(colors.userTextColor)
+                container.addView(this)
             }
-            container.addView(headerView)
-
-            // Each item as bullet point
-            items.forEach { item ->
-                val itemView = TextView(requireContext()).apply {
-                    text = "• $item"
-                    setPadding(16, 4, 0, 4)
+            items.forEach { food ->
+                TextView(requireContext()).apply {
+                    text = "• $food"; setPadding(16,4,0,4)
+                    setTextColor(colors.userTextColor)
+                    container.addView(this)
                 }
-                container.addView(itemView)
             }
+        }
+
+        // Buttons
+        binding.btnTakeQuiz.setOnClickListener {
+            findNavController().navigate(R.id.action_mainFragment_to_homeFragment)
+        }
+        binding.btnMakeRecipes.setOnClickListener {
+            findNavController().navigate(R.id.action_mainFragment_to_recipesFragment)
         }
     }
 
