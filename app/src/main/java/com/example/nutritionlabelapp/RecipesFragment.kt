@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import com.example.nutritionlabelapp.data.LocalStorage
+
 
 class RecipesFragment : Fragment(R.layout.fragment_recipes) {
 
@@ -31,6 +33,8 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
 
     private val firestore = FirebaseFirestore.getInstance()
     private lateinit var recipesAdapter: RecipesAdapter
+    private val recipes = mutableListOf<String>()
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -69,6 +73,14 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
         binding.rvRecipes.layoutManager = LinearLayoutManager(requireContext())
         binding.rvRecipes.adapter = recipesAdapter
 
+        // Restore any saved recipes
+        recipes.addAll(LocalStorage.loadRecipes(requireContext()))
+        if (recipes.isNotEmpty()) {
+            recipesAdapter.submitList(recipes.toList())
+            binding.rvRecipes.scrollToPosition(0)
+        }
+
+
         // “Create Recipes” button
         binding.btnCreate.setOnClickListener {
             generateRecipes()
@@ -76,6 +88,7 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
     }
 
     private fun generateRecipes() {
+        recipes.clear()
         // 1) placeholder
         recipesAdapter.submitList(listOf("Creating recipes…"))
         binding.rvRecipes.scrollToPosition(0)
@@ -162,7 +175,10 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
             }
 
             val finalText = if (success) responseText else "Error: $responseText"
-            recipesAdapter.submitList(listOf(finalText))
+            //recipesAdapter.submitList(listOf(finalText))
+            recipes.clear()
+            recipes.add(finalText)
+            recipesAdapter.submitList(recipes.toList())
             binding.rvRecipes.scrollToPosition(0)
         }
     }
@@ -198,6 +214,11 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
             }
         }
         return result
+    }
+
+    override fun onPause() {
+        super.onPause()
+        LocalStorage.saveRecipes(requireContext(), recipes)
     }
 
     override fun onDestroyView() {

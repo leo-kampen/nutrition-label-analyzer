@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import android.util.Base64
+import com.example.nutritionlabelapp.data.LocalStorage
 
 class ChatFragment : Fragment() {
 
@@ -61,6 +62,14 @@ class ChatFragment : Fragment() {
             stackFromEnd = true
         }
         binding.rvChat.adapter = adapter
+
+        // Restore any saved conversation
+        conversation.addAll(LocalStorage.loadChat(requireContext()))
+        if (conversation.isNotEmpty()) {
+            adapter.submitList(conversation.toList())
+            binding.rvChat.scrollToPosition(conversation.size - 1)
+        }
+
 
         // Camera → image result listener
         parentFragmentManager.setFragmentResultListener(
@@ -165,6 +174,12 @@ class ChatFragment : Fragment() {
             binding.rvChat.scrollToPosition(conversation.size - 1)
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        LocalStorage.saveChat(requireContext(), conversation)
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
