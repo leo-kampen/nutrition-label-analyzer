@@ -1,3 +1,4 @@
+
 package com.example.nutritionlabelapp
 
 import android.net.Uri
@@ -31,6 +32,11 @@ class ChatFragment : Fragment() {
     // our full history
     private val conversation = mutableListOf<ChatMessage>()
 
+    private fun updatePlaceholderVisibility() {
+        binding.tvPlaceholder.visibility =
+            if (conversation.isEmpty()) View.VISIBLE else View.GONE
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -63,12 +69,22 @@ class ChatFragment : Fragment() {
         }
         binding.rvChat.adapter = adapter
 
+        // New chat FAB
+        binding.fabNewChat.setOnClickListener {
+            conversation.clear()
+            adapter.submitList(conversation.toList())
+            binding.etMessage.text?.clear()
+            LocalStorage.saveChat(requireContext(), conversation)
+            updatePlaceholderVisibility()
+        }
+
         // Restore any saved conversation
         conversation.addAll(LocalStorage.loadChat(requireContext()))
         if (conversation.isNotEmpty()) {
             adapter.submitList(conversation.toList())
             binding.rvChat.scrollToPosition(conversation.size - 1)
         }
+        updatePlaceholderVisibility()
 
 
         // Camera → image result listener
@@ -84,6 +100,7 @@ class ChatFragment : Fragment() {
             conversation += ChatMessage(systemPrompt, isUser = true)
             adapter.submitList(conversation.toList())
             binding.rvChat.scrollToPosition(conversation.size - 1)
+            updatePlaceholderVisibility()
 
             // encode image + send
             lifecycleScope.launch {
@@ -110,6 +127,7 @@ class ChatFragment : Fragment() {
             adapter.submitList(conversation.toList())
             binding.etMessage.text?.clear()
             binding.rvChat.scrollToPosition(conversation.size - 1)
+            updatePlaceholderVisibility()
 
             callGenerate(text, images = null)
         }
@@ -129,6 +147,7 @@ class ChatFragment : Fragment() {
             conversation += ChatMessage("Analyzing…", isUser = false)
             adapter.submitList(conversation.toList())
             binding.rvChat.scrollToPosition(conversation.size - 1)
+            updatePlaceholderVisibility()
 
             // 2) build prompt
             val prompt = conversation.joinToString("\n") { msg ->
@@ -172,6 +191,7 @@ class ChatFragment : Fragment() {
             // 6) update UI & scroll
             adapter.submitList(conversation.toList())
             binding.rvChat.scrollToPosition(conversation.size - 1)
+            updatePlaceholderVisibility()
         }
     }
 
