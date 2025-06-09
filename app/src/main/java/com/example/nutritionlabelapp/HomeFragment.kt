@@ -205,14 +205,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         questions.addAll(listOf(
             QuizQuestion(1, "How would you describe your eating preferences?", listOf(
                 "Omnivore", "Pescatarian", "Vegetarian", "Vegan"
-            ), multiSelect = false),
+            ), multiSelect = true),
             QuizQuestion(2, "Do you follow any dietary restrictions?", listOf(
                 "Dairy-free", "Gluten-free", "Nut-free", "Soy-free",
                 "Egg-free", "Shellfish-free", "Low FODMAP", "None"
-            ), multiSelect = false),
+            ), multiSelect = true),
             QuizQuestion(3, "Do you follow any cultural or religious dietary guidelines?", listOf(
                 "Halal", "Kosher", "None"
-            ), multiSelect = false),
+            ), multiSelect = true),
             QuizQuestion(4, "What kitchen equipment do you regularly have access to?", listOf(
                 "Full kitchen (stove, oven, fridge, microwave)",
                 "Basic kitchen (stove & fridge)",
@@ -226,8 +226,19 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             QuizQuestion(6, "What kind of recipes or food ideas interest you most?", listOf(
                 "Quick & easy", "Budget-friendly", "Healthy & nutritious",
                 "Cultural preferences", "Meal prep ideas", "Snacks & treats"
+            ), multiSelect = true),
+            QuizQuestion(7, "What is your weekly budget?", listOf(
+                "I prefer not to answer"
             ), multiSelect = false),
-            QuizQuestion(7, "Anything else we should know?", listOf("No"), multiSelect = false)
+            QuizQuestion(8, "How many people do you usually cook for?", listOf(
+                "1", "2", "3-4", "5+", "I prefer not to answer"
+            ), multiSelect = false),
+            QuizQuestion(9, "What state do you live in?", listOf(
+                "I prefer not to answer"
+            ), multiSelect = false),
+            QuizQuestion(10, "Anything else we should know?", listOf(
+                "No"
+            ), multiSelect = false)
         ))
 
         // RecyclerView + adapter

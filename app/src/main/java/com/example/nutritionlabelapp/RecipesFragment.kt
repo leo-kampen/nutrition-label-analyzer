@@ -133,7 +133,10 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
             "q4" to "What kitchen equipment do you regularly have access to?",
             "q5" to "How much time do you typically want to spend preparing meals?",
             "q6" to "What kind of recipes or food ideas interest you most?",
-            "q7" to "Anything else we should know?"
+            "q7" to "What is your weekly budget",
+            "q8" to "How many people do you usually cook for?",
+            "q9" to "What state do you live in?",
+            "q10" to "Anything else we should know?"
         )
 
         return buildString {
@@ -147,9 +150,13 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
                 append("$category: ${items.joinToString(", ")}\n")
             }
             append(
-                "\nPlease suggest exactly three recipes using these ingredients." +
-                        " For each recipe, provide a title, list of ingredients, and step-by-step instructions.\n"
-            )
+                "\nPlease suggest exactly seven recipes using these ingredients." +
+                        " For each recipe, provide a title, list of ingredients, and step-by-step instructions." +
+                        " Include an estimated total price right below the title." +
+                        " Base the total cost of the meal on these answers: 'How many people do you usually cook for?' and 'What state do you live in?'." +
+                        " Also use this website to help generate the cost for each meal: https://www.budgetbytes.com/how-to-calculate-recipe-costs/\n"            )
+
+
         }
     }
 
