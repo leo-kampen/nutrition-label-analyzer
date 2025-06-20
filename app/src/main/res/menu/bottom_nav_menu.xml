@@ -1,10 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- before, you probably had something like nav_home, nav_chat, nav_more -->
-    <!-- change them to exactly the IDs you used in nav_graph: homeFragment, chatFragment, moreFragment -->
-
     <item
-        android:id="@+id/homeFragment"
+        android:id="@+id/mainFragment"
         android:icon="@android:drawable/ic_menu_view"
         android:title="Home" />
 
@@ -19,5 +16,3 @@
         android:title="More" />
 
 </menu>
-
-

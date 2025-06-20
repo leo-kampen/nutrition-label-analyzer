@@ -1,23 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/text_question"
+        android:id="@+id/textQuestion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceSubtitle1"
-        android:textStyle="bold"
-        android:paddingBottom="8dp" />
+        android:textAppearance="?attr/textAppearanceSubtitle1"/>
 
-    <!-- Options will be added dynamically -->
+    <!-- Container for options (RadioButtons or CheckBoxes) -->
     <RadioGroup
-        android:id="@+id/radio_group"
+        android:id="@+id/radioGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"/>
 
+    <!-- “Other” text entry, hidden by default -->
+    <EditText
+        android:id="@+id/etOther"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Please specify…"
+        android:visibility="gone"/>
 </LinearLayout>

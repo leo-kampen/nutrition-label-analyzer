@@ -1,4 +1,3 @@
-// File: app/src/main/java/com/example/nutritionlabelapp/MainActivity.kt
 package com.example.nutritionlabelapp
 
 import android.content.res.ColorStateList
