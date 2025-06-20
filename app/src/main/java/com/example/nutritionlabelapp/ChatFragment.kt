@@ -1,4 +1,3 @@
-
 package com.example.nutritionlabelapp
 
 import android.net.Uri

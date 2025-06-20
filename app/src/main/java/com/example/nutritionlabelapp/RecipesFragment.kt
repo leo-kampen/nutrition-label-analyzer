@@ -141,10 +141,16 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
 
         return buildString {
             append("User quiz answers:\n")
-            quiz.forEach { (key, answer) ->
-                val questionText = questionTitles[key] ?: key
-                append("$questionText: $answer\n")
-            }
+//            quiz.forEach { (key, answer) ->
+//                val questionText = questionTitles[key] ?: key
+//                append("$questionText: $answer\n")
+//            }
+            quiz
+                .toSortedMap(compareBy { it.removePrefix("q").toIntOrNull() ?: Int.MAX_VALUE })
+                .forEach { (key, answer) ->
+                    val questionText = questionTitles[key] ?: key
+                    append("$questionText: $answer\n")
+                }
             append("\nAvailable food items:\n")
             foods.forEach { (category, items) ->
                 append("$category: ${items.joinToString(", ")}\n")
@@ -152,7 +158,7 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
             append(
                 "\nPlease suggest exactly seven recipes using these ingredients." +
                         " For each recipe, provide a title, list of ingredients, and step-by-step instructions." +
-                        " Include an estimated total price right below the title." +
+                        " Include an estimated total price right below the title of each recipe and the total amount for the 7 meals at the top." +
                         " Base the total cost of the meal on these answers: 'How many people do you usually cook for?' and 'What state do you live in?'." +
                         " Also use this website to help generate the cost for each meal: https://www.budgetbytes.com/how-to-calculate-recipe-costs/\n"            )
 
@@ -184,6 +190,7 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
             val finalText = if (success) responseText else "Error: $responseText"
             //recipesAdapter.submitList(listOf(finalText))
             recipes.clear()
+            //recipes.add("Prompt sent to model:\n$prompt")
             recipes.add(finalText)
             recipesAdapter.submitList(recipes.toList())
             binding.rvRecipes.scrollToPosition(0)

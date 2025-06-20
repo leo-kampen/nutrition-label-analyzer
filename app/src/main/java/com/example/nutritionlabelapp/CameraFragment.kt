@@ -1,4 +1,3 @@
-// File: app/src/main/java/com/example/nutritionlabelapp/CameraFragment.kt
 package com.example.nutritionlabelapp
 
 import android.Manifest
